@@ -6,31 +6,24 @@ const Track = mongoose.model('Track');
 const router = express.Router();
 
 router.get('/Tracks', async (req, res) => {
-    let { zipCode, trackName, lat, lng, radius = 80467 } = req.query; // Default radius is 50 miles (in meters)
+    let { zipCode, trackName, lat, lng, radius = 80467, page = 1, limit = 10 } = req.query;
 
-    // Check if we have at least one valid search parameter (zip, trackName, or lat/lng)
+    page = parseInt(page, 10);
+    limit = parseInt(limit, 10);
+
     if (!zipCode && !trackName && (!lat || !lng)) {
         return res.status(400).json({ message: 'Please provide a track name, zip code, or location.' });
     }
 
     try {
-        // If the trackName is provided
-        if (trackName) {
-            const sanitizedTrackName = escapeRegExp(trackName);
-            const tracks = await Track.find({
-                name: { $regex: sanitizedTrackName, $options: 'i' }
-            }).lean();
-            if (tracks.length === 0) {
-                return res.status(404).json({ message: 'No tracks found with that name.' });
-            }
+        let query = {};
 
-            return res.json({ tracks });
+        if (trackName) {
+            query.name = { $regex: escapeRegExp(trackName), $options: 'i' };
         }
 
-        // If zipCode is provided, convert it to lat/lng (geocode it)
         if (zipCode) {
-            const userLocation = await geocodeZipCode(zipCode); // Assuming this returns { lat, lng }
-
+            const userLocation = await geocodeZipCode(zipCode);
             if (!userLocation) {
                 return res.status(404).json({ message: 'No tracks found in this area.' });
             }
@@ -38,34 +31,37 @@ router.get('/Tracks', async (req, res) => {
             lng = userLocation.lng;
         }
 
-        // If lat/lng is provided (either from location services or geocoding), use it to search for nearby tracks
         if (lat && lng) {
-            // Convert radius to number if it's provided as a string
-            radius = parseFloat(radius);
-
-            const tracks = await Track.find({
-                coordinates: {
-                    $near: {
-                        $geometry: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
-                        $maxDistance: radius  // Limit search to the radius provided (default to 50 miles)
-                    }
+            query.coordinates = {
+                $near: {
+                    $geometry: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
+                    $maxDistance: parseFloat(radius)
                 }
-            }).lean();
-
-            if (tracks.length === 0) {
-                return res.status(404).json({ message: 'No tracks found in this area.' });
-            }
-            return res.json({ tracks, lat, lng });
+            };
         }
 
-        // If nothing matches, return an error
-        return res.status(400).json({ message: 'Invalid search parameters provided.' });
+        // **Get total count before applying pagination**
+        const totalTracks = await Track.countDocuments(query);
+
+        const tracks = await Track.find(query)
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .lean();
+
+        return res.json({
+            tracks,
+            totalCount: totalTracks, // Total number of matching tracks
+            currentPage: page,
+            totalPages: Math.ceil(totalTracks / limit),
+            hasMore: page * limit < totalTracks
+        });
 
     } catch (error) {
         console.error('Error fetching tracks:', error);
         return res.status(500).json({ error: 'Failed to fetch tracks.' });
     }
 });
+
 
 router.get('/tracks/byIds', async (req, res) => {
     const { ids } = req.query;
