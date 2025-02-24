@@ -7,7 +7,7 @@ const sendPushNotification = async (pushToken, currentUser, message) => {
     const messagePayload = {
         to: pushToken,
         sound: 'default',
-        title: `@${currentUser.userName}`,
+        title: `TrackMate @${currentUser.userName}`,
         body: cleanedMessage,
     };
 
