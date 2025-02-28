@@ -179,48 +179,42 @@ io.on('connection', (socket) => {
 
 
     // Socket.io handling for deleteConversationForUser
-    socket.on('deleteConversationForUser', async () => {
+    socket.on('deleteConversationForUser', async ({ conversationId }) => {
         try {
-            // Add the user's ID to the removedFromConvo array for conversations where they're the sender or receiver
+            // Add the user's ID to the removedFromConvo array for all messages in the conversation
             await Inbox.updateMany(
-                {
-                    $or: [
-                        { senderId: socket.user.id },
-                        { receiverId: socket.user.id }
-                    ]
-                },
-                { $addToSet: { removedFromConvo: socket.user.id } } // Ensure the ID is added only once
+                { conversationId },
+                { $addToSet: { removedFromConvo: socket.user.id } }
             );
 
-            // Fetch all conversations where the user is involved
-            const conversations = await Inbox.find({
-                $or: [
-                    { senderId: socket.user.id },
-                    { receiverId: socket.user.id }
-                ]
-            });
+            // Fetch all messages in the conversation
+            const messages = await Inbox.find({ conversationId });
 
-            // Check if both users have removed the conversation
-            for (const conversation of conversations) {
-                if (
-                    conversation.removedFromConvo.length === 2 // Both users have removed it
-                ) {
-                    // If both users have removed the conversation, delete it from the database
-                    await Inbox.deleteOne({ conversationId: conversation.conversationId });
-                    console.log('Conversation deleted from DB as both users removed it');
+            // Check if all messages have both users in removedFromConvo
+            const allRemoved = messages.every(msg => msg.removedFromConvo.length === 2);
 
-                    // Emit deletion to both users' sockets
-                    const otherUserId = conversation.senderId.toString() === socket.user.id ? conversation.receiverId : conversation.senderId;
-                    const otherUserSockets = connectedUsers.get(otherUserId) || [];
-                    otherUserSockets.forEach(socketId => {
-                        io.to(socketId).emit('conversationDeleted', { conversationId: conversation.conversationId });
-                    });
+            if (allRemoved) {
+                // If both users have removed all messages, delete them
+                await Inbox.deleteMany({ conversationId });
 
-                    const currentUserSockets = connectedUsers.get(socket.user.id) || [];
-                    currentUserSockets.forEach(socketId => {
-                        io.to(socketId).emit('conversationDeleted', { conversationId: conversation.conversationId });
-                    });
-                }
+                console.log('Conversation and messages deleted as both users removed it');
+
+                // Notify both users
+                const firstMessage = messages[0]; // Use first message to get sender/receiver
+                const otherUserId =
+                    firstMessage.senderId.toString() === socket.user.id
+                        ? firstMessage.receiverId
+                        : firstMessage.senderId;
+
+                const otherUserSockets = connectedUsers.get(otherUserId) || [];
+                otherUserSockets.forEach(socketId => {
+                    io.to(socketId).emit('conversationDeleted', { conversationId });
+                });
+
+                const currentUserSockets = connectedUsers.get(socket.user.id) || [];
+                currentUserSockets.forEach(socketId => {
+                    io.to(socketId).emit('conversationDeleted', { conversationId });
+                });
             }
 
             socket.emit('conversationDeletedForUser');
@@ -229,6 +223,7 @@ io.on('connection', (socket) => {
             socket.emit('error', 'Failed to delete conversation for user');
         }
     });
+
 
     // Fetch messages for a specific conversation
     socket.on('fetchMessages', async (conversationId) => {
