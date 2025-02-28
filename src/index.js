@@ -120,7 +120,7 @@ io.on('connection', (socket) => {
             // Send push notification if the receiver has a push token
             if (otherUser.pushToken) {
                 try {
-                    console.log('sending notification')
+                    console.log('sending notification', socket.user.id, otherUser.pushToken)
                     await sendPushNotification(otherUser.pushToken, currentUser, message);
                 } catch (error) {
                     console.error("Failed to send push notification:", error);
