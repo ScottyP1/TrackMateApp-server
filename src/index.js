@@ -180,7 +180,7 @@ io.on('connection', (socket) => {
 
 
     // Socket.io handling for deleteConversationForUser
-    socket.on('deleteConversationForUser', async ({ conversationId }) => {
+    socket.on('deleteConversationForUser', async (conversationId) => {
         console.log("ConvoId", conversationId)
         try {
             // Add the user's ID to the removedFromConvo array for all messages in the conversation
