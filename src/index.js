@@ -193,7 +193,10 @@ io.on('connection', (socket) => {
             const messages = await Inbox.find({ conversationId });
 
             // Check if all messages have both users in removedFromConvo
-            const allRemoved = messages.every(msg => msg.removedFromConvo.length === 2);
+            const allRemoved = messages.every(msg => {
+                return msg.removedFromConvo.includes(msg.senderId.toString()) &&
+                    msg.removedFromConvo.includes(msg.receiverId.toString());
+            });
 
             if (allRemoved) {
                 // If both users have removed all messages, delete them
@@ -317,7 +320,7 @@ io.on('connection', (socket) => {
 
 // MongoDB connection
 const mongoUri = process.env.MONGOURI;
-mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(mongoUri)
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('Error connecting to MongoDB', err));
 
