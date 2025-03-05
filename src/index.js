@@ -181,7 +181,6 @@ io.on('connection', (socket) => {
 
     // Socket.io handling for deleteConversationForUser
     socket.on('deleteConversationForUser', async (conversationId) => {
-        console.log("ConvoId", conversationId)
         try {
             // Add the user's ID to the removedFromConvo array for all messages in the conversation
             await Inbox.updateMany(
@@ -213,12 +212,12 @@ io.on('connection', (socket) => {
 
                 const otherUserSockets = connectedUsers.get(otherUserId) || [];
                 otherUserSockets.forEach(socketId => {
-                    io.to(socketId).emit('conversationDeleted', { conversationId });
+                    io.to(socketId).emit('conversationDeletedForUser', { conversationId });
                 });
 
                 const currentUserSockets = connectedUsers.get(socket.user.id) || [];
                 currentUserSockets.forEach(socketId => {
-                    io.to(socketId).emit('conversationDeleted', { conversationId });
+                    io.to(socketId).emit('conversationDeletedForUser', { conversationId });
                 });
             }
 

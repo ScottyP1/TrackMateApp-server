@@ -7,10 +7,11 @@ const sendPushNotification = async (pushToken, currentUser, message) => {
     const messagePayload = {
         to: pushToken,
         sound: 'default',
-        title: `TrackMate @${currentUser.userName}`,
-        body: cleanedMessage,
+        title: 'TrackMate',
+        subtitle: currentUser.userName,
+        body: cleanedMessage
     };
-
+    // @${currentUser.userName}`
     try {
         await axios.post('https://exp.host/--/api/v2/push/send', messagePayload, {
             headers: { 'Content-Type': 'application/json' },

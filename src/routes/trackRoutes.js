@@ -78,7 +78,10 @@ router.get('/tracks/byIds', async (req, res) => {
         // Convert to an array (handles both single and multiple IDs)
         const trackIds = ids.split(',').map(id => mongoose.Types.ObjectId.createFromHexString(id));
 
-        const tracks = await Track.find({ _id: { $in: trackIds } }).lean();
+        // Fetch tracks, and populate the owner field with user data (username, avatar)
+        const tracks = await Track.find({ _id: { $in: trackIds } })
+            .lean()
+            .populate('owner', 'username avatar'); // Populate only the `username` and `avatar` fields of the owner
 
         if (tracks.length === 0) {
             return res.status(404).json({ message: 'No tracks found for the given ID(s).' });
@@ -91,6 +94,8 @@ router.get('/tracks/byIds', async (req, res) => {
         return res.status(500).json({ error: 'Failed to fetch track(s).' });
     }
 });
+
+
 
 
 module.exports = router;
