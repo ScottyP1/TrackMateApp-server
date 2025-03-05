@@ -9,7 +9,7 @@ const trackSchema = new mongoose.Schema(
         placeId: { type: String, unique: true },
         website: { type: String, required: false },
         openingHours: { type: Boolean, default: null },
-        owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        owner: { type: String },
         logo: { type: String, default: 'https://via.placeholder.com/300x300?text=No+Logo' },  // Store the logo URL
         type: { type: String, required: true },  // This should be the 'type' field
     },
