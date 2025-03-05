@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const axios = require('axios');
 
 const Track = mongoose.model('Track');
+const User = mongoose.model('User')
 const router = express.Router();
 
 router.get('/Tracks', async (req, res) => {
@@ -75,22 +76,28 @@ router.get('/tracks/byIds', async (req, res) => {
     }
 
     try {
-        // Convert to an array (handles both single and multiple IDs)
         const trackIds = ids.split(',').map(id => mongoose.Types.ObjectId.createFromHexString(id));
 
-        // Fetch tracks and populate the 'owner' field with user data (username, avatar)
+        // Fetch tracks by IDs
         const tracks = await Track.find({ _id: { $in: trackIds } })
-            .lean()
-            .populate('owner', 'username avatar');  // Mongoose will look for the 'User' model here
+            .lean();
+
+        // Manually map owner field to a user object by querying the User model
+        for (let track of tracks) {
+            const userId = track.owner; // This is a string ID, not an ObjectId
+            if (userId) {
+                const user = await User.findById(userId);
+                track.owner = user; // Replace owner with full user document
+            }
+        }
 
         if (tracks.length === 0) {
             return res.status(404).json({ message: 'No tracks found for the given ID(s).' });
         }
 
         return res.json(tracks);
-
     } catch (error) {
-        console.error('Error fetching tracks by ID(s):', error);
+        console.error('Error fetching tracks:', error);
         return res.status(500).json({ error: 'Failed to fetch track(s).' });
     }
 });
