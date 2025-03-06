@@ -185,9 +185,11 @@ io.on('connection', (socket) => {
     socket.on('deleteConversationForUser', async (conversationId) => {
         try {
             // Ensure removedFromConvo is updated
+            const userId = new mongoose.Types.ObjectId(socket.user.id);
+
             const updateResult = await Inbox.updateMany(
                 { conversationId },
-                { $addToSet: { removedFromConvo: new mongoose.Types.ObjectId(socket.user.id) } }
+                { $addToSet: { removedFromConvo: userId } }
             );
 
             console.log(updateResult); // Debug: Check if documents were modified
