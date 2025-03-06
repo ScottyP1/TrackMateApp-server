@@ -94,15 +94,22 @@ router.get('/tracks/byIds', async (req, res) => {
 
 router.patch('/track', async (req, res) => {
     const { id } = req.query; // Track ID from query
-    const { announcement } = req.body; // Updated announcement from body
+    let { announcement } = req.body; // Updated announcement from body
 
     if (!id || !announcement) {
         return res.status(400).json({ message: 'Please provide a track ID and the updated announcement.' });
     }
 
     try {
+        announcement = announcement.trim();
+
+        if (!announcement || announcement.length < 3) {
+            return res.status(400).json({ message: 'Announcement is too short.' });
+        }
+
         // Convert ID to ObjectId
         const trackId = new mongoose.Types.ObjectId(id);
+        console.log(`Updating track with ID: ${trackId}, New Announcement: ${announcement}`);
 
         // Update the track's announcement field
         const updatedTrack = await Track.findByIdAndUpdate(
