@@ -243,7 +243,7 @@ io.on('connection', (socket) => {
             console.log(socket.user.id)
             const conversations = await Inbox.find({
                 $or: [{ senderId: socket.user.id }, { receiverId: socket.user.id }],
-                removedFromConvo: { $ne: socket.user.id }, // Exclude deleted conversations for this user
+                removedFromConvo: { $not: { $in: [socket.user.id] } }, // Ensure user ID is NOT in removedFromConvo array
             }).sort({ createdAt: -1 });
 
             // Get unique conversationIds
