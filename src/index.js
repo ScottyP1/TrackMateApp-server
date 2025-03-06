@@ -180,26 +180,32 @@ io.on('connection', (socket) => {
 
 
     // Socket.io handling for deleteConversationForUser
+    const mongoose = require('mongoose');
+
     socket.on('deleteConversationForUser', async (conversationId) => {
         try {
-            // Add the user's ID to the removedFromConvo array for all messages in the conversation
-            await Inbox.updateMany(
+            // Ensure removedFromConvo is updated
+            const updateResult = await Inbox.updateMany(
                 { conversationId },
                 { $addToSet: { removedFromConvo: new mongoose.Types.ObjectId(socket.user.id) } }
             );
 
+            console.log(updateResult); // Debug: Check if documents were modified
+
             // Fetch all messages in the conversation
             const messages = await Inbox.find({ conversationId });
+            console.log(messages); // Debug: Ensure removedFromConvo exists
 
             // Check if all messages have both users in removedFromConvo
             const allRemoved = messages.every(msg => {
-                return msg.removedFromConvo.includes(msg.senderId.toString()) &&
-                    msg.removedFromConvo.includes(msg.receiverId.toString());
+                const removedIds = msg.removedFromConvo.map(id => id.toString());
+                return removedIds.includes(msg.senderId.toString()) &&
+                    removedIds.includes(msg.receiverId.toString());
             });
 
             if (allRemoved) {
-                // If both users have removed all messages, delete them
                 await Inbox.deleteMany({ conversationId });
+                console.log('All messages deleted');
             }
 
             socket.emit('conversationDeletedForUser');
@@ -208,6 +214,7 @@ io.on('connection', (socket) => {
             socket.emit('error', 'Failed to delete conversation for user');
         }
     });
+
 
 
     // Fetch messages for a specific conversation
