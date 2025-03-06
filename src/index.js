@@ -184,6 +184,7 @@ io.on('connection', (socket) => {
 
     socket.on('deleteConversationForUser', async (conversationId) => {
         try {
+            console.log(conversationId)
             // Ensure removedFromConvo is updated
             const userId = new mongoose.Types.ObjectId(socket.user.id);
 
