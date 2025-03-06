@@ -92,6 +92,35 @@ router.get('/tracks/byIds', async (req, res) => {
     }
 });
 
+router.patch('/track', async (req, res) => {
+    const { id } = req.query; // Track ID from query
+    const { announcement } = req.body; // Updated announcement from body
+
+    if (!id || !announcement) {
+        return res.status(400).json({ message: 'Please provide a track ID and the updated announcement.' });
+    }
+
+    try {
+        // Convert ID to ObjectId
+        const trackId = new mongoose.Types.ObjectId(id);
+
+        // Update the track's announcement field
+        const updatedTrack = await Track.findByIdAndUpdate(
+            trackId,
+            { $set: { announcement } },
+            { new: true } // Return the updated document
+        ).lean();
+
+        if (!updatedTrack) {
+            return res.status(404).json({ message: 'Track not found.' });
+        }
+
+        return res.json(updatedTrack);
+    } catch (error) {
+        console.error('Error updating track announcement:', error);
+        return res.status(500).json({ error: 'Failed to update track announcement.' });
+    }
+});
 
 module.exports = router;
 
