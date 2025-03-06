@@ -184,7 +184,6 @@ io.on('connection', (socket) => {
 
     socket.on('deleteConversationForUser', async (conversationId) => {
         try {
-            console.log(conversationId)
             // Ensure removedFromConvo is updated
             const userId = new mongoose.Types.ObjectId(socket.user.id);
 
@@ -193,11 +192,8 @@ io.on('connection', (socket) => {
                 { $addToSet: { removedFromConvo: userId } }
             );
 
-            console.log(updateResult); // Debug: Check if documents were modified
-
             // Fetch all messages in the conversation
             const messages = await Inbox.find({ conversationId });
-            console.log(messages); // Debug: Ensure removedFromConvo exists
 
             // Check if all messages have both users in removedFromConvo
             const allRemoved = messages.every(msg => {
@@ -208,7 +204,6 @@ io.on('connection', (socket) => {
 
             if (allRemoved) {
                 await Inbox.deleteMany({ conversationId });
-                console.log('All messages deleted');
             }
 
             socket.emit('conversationDeletedForUser');
