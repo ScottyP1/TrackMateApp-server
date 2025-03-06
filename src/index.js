@@ -185,7 +185,7 @@ io.on('connection', (socket) => {
             // Add the user's ID to the removedFromConvo array for all messages in the conversation
             await Inbox.updateMany(
                 { conversationId },
-                { $addToSet: { removedFromConvo: socket.user.id } }
+                { $addToSet: { removedFromConvo: new mongoose.Types.ObjectId(socket.user.id) } }
             );
 
             // Fetch all messages in the conversation
@@ -240,7 +240,7 @@ io.on('connection', (socket) => {
     socket.on('fetchConversations', async () => {
         try {
             // Find all conversations where the user is either the sender or the receiver
-            console.log(socket.user.id)
+
             const conversations = await Inbox.find({
                 $or: [{ senderId: socket.user.id }, { receiverId: socket.user.id }],
                 removedFromConvo: { $not: { $in: [socket.user.id] } }, // Ensure user ID is NOT in removedFromConvo array
