@@ -200,25 +200,6 @@ io.on('connection', (socket) => {
             if (allRemoved) {
                 // If both users have removed all messages, delete them
                 await Inbox.deleteMany({ conversationId });
-
-                console.log('Conversation and messages deleted as both users removed it');
-
-                // Notify both users
-                const firstMessage = messages[0]; // Use first message to get sender/receiver
-                const otherUserId =
-                    firstMessage.senderId.toString() === socket.user.id
-                        ? firstMessage.receiverId
-                        : firstMessage.senderId;
-
-                const otherUserSockets = connectedUsers.get(otherUserId) || [];
-                otherUserSockets.forEach(socketId => {
-                    io.to(socketId).emit('conversationDeletedForUser', { conversationId });
-                });
-
-                const currentUserSockets = connectedUsers.get(socket.user.id) || [];
-                currentUserSockets.forEach(socketId => {
-                    io.to(socketId).emit('conversationDeletedForUser', { conversationId });
-                });
             }
 
             socket.emit('conversationDeletedForUser');
@@ -259,6 +240,7 @@ io.on('connection', (socket) => {
     socket.on('fetchConversations', async () => {
         try {
             // Find all conversations where the user is either the sender or the receiver
+            console.log(socket.user.id)
             const conversations = await Inbox.find({
                 $or: [{ senderId: socket.user.id }, { receiverId: socket.user.id }],
                 removedFromConvo: { $ne: socket.user.id }, // Exclude deleted conversations for this user

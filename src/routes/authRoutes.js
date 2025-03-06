@@ -225,7 +225,6 @@ router.get('/Account', async (req, res) => {
             }
 
             if (id && !user) {
-                console.log('its a Id', id)
                 user = await User.findById(id);
             }
 
