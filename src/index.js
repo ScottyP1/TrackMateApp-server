@@ -218,7 +218,7 @@ io.on('connection', (socket) => {
     socket.on('trackAnnouncement', async (id, announcement) => {
         try {
             console.log('annoucement')
-            const trackId = mongoose.Types.ObjectId(id);
+            const trackId = new mongoose.Types.ObjectId(id);
 
             const track = await Track.findById(trackId);
             if (!track) {

@@ -109,7 +109,6 @@ router.patch('/track', async (req, res) => {
 
         // Convert ID to ObjectId
         const trackId = new mongoose.Types.ObjectId(id);
-        console.log(`Updating track with ID: ${trackId}, New Announcement: ${announcement}`);
 
         // Update the track's announcement field
         const updatedTrack = await Track.findByIdAndUpdate(
