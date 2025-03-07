@@ -20,11 +20,10 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const Inbox = require('./models/Inbox');
 
 // Push 
 const sendPushNotification = require('./notificationService');
-
+const sendAnnoncementNotification = require('./announcementsNotification');
 
 // Initialize app and server
 const app = express();
@@ -62,6 +61,9 @@ io.use((socket, next) => {
 
 // Handling socket events
 const User = require('./models/User'); // Import User model
+const Inbox = require('./models/Inbox');
+const Track = require('./models/Track');
+
 const connectedUsers = new Map(); // userId -> [socketId1, socketId2, ...]
 
 // Socket.io handling for fetchConversations
@@ -213,9 +215,33 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('trackAnnouncement', (id, announcment) => {
-        console.log('New Announcement', id, announcment)
-    })
+    socket.on('trackAnnouncement', async (id, announcement) => {
+        try {
+            const trackId = mongoose.Types.ObjectId(id);
+
+            const track = await Track.findById(trackId);
+            if (!track) {
+                console.log('Track not found');
+                return;
+            }
+
+            const usersWithFavoriteTrack = await User.find({
+                favorites: { $in: [trackId] }
+            }).select('pushToken');
+
+            const pushTokens = usersWithFavoriteTrack
+                .filter(user => user.pushToken)
+                .map(user => user.pushToken);
+
+            for (let token of pushTokens) {
+                await sendAnnoncementNotification({ token, announcement, trackName: track.name });
+            }
+
+        } catch (error) {
+            console.error('Error handling track announcement:', error);
+        }
+    });
+
 
     // Fetch messages for a specific conversation
     socket.on('fetchMessages', async (conversationId) => {
