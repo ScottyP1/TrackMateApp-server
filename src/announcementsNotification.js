@@ -2,6 +2,7 @@ const axios = require('axios');
 
 const sendAnnoncementNotification = async (token, announcement, trackName) => {
     // Clean message (trim whitespace and limit length)
+    console.log('inside annoucmet', token, announcement, trackName)
     const cleanedMessage = announcement.trim().slice(0, 200); // Adjust the length if needed
     const messagePayload = {
         to: token,
