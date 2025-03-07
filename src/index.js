@@ -213,7 +213,9 @@ io.on('connection', (socket) => {
         }
     });
 
-
+    socket.on('trackAnnouncement', (id, announcment) => {
+        console.log('New Announcement', id, announcment)
+    })
 
     // Fetch messages for a specific conversation
     socket.on('fetchMessages', async (conversationId) => {
