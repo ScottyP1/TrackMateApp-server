@@ -179,11 +179,6 @@ io.on('connection', (socket) => {
         }
     });
 
-
-
-    // Socket.io handling for deleteConversationForUser
-    const mongoose = require('mongoose');
-
     socket.on('deleteConversationForUser', async (conversationId) => {
         try {
             // Ensure removedFromConvo is updated
@@ -217,7 +212,6 @@ io.on('connection', (socket) => {
 
     socket.on('trackAnnouncement', async (id, announcement) => {
         try {
-            console.log('inside index', announcement)
             const trackId = new mongoose.Types.ObjectId(id);
 
             const track = await Track.findById(trackId);
@@ -228,7 +222,6 @@ io.on('connection', (socket) => {
             const usersWithFavoriteTrack = await User.find({
                 favorites: { $in: [trackId] }
             }).select('pushToken');
-            console.log(usersWithFavoriteTrack)
 
             const pushTokens = usersWithFavoriteTrack
                 .filter(user => user.pushToken)
