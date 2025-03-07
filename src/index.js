@@ -217,6 +217,7 @@ io.on('connection', (socket) => {
 
     socket.on('trackAnnouncement', async (id, announcement) => {
         try {
+            console.log('annoucement')
             const trackId = mongoose.Types.ObjectId(id);
 
             const track = await Track.findById(trackId);
@@ -224,10 +225,12 @@ io.on('connection', (socket) => {
                 console.log('Track not found');
                 return;
             }
+            console.log(track)
 
             const usersWithFavoriteTrack = await User.find({
                 favorites: { $in: [trackId] }
             }).select('pushToken');
+            console.log(usersWithFavoriteTrack)
 
             const pushTokens = usersWithFavoriteTrack
                 .filter(user => user.pushToken)
