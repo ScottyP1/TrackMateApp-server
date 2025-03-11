@@ -290,17 +290,26 @@ router.patch('/Account', async (req, res) => {
                     return res.status(400).json({ error: 'You cannot block yourself' });
                 }
 
-                // Add each blocked user to the blocked array if not already blocked
                 blockedUserIds.forEach((blockedId) => {
+                    // If it's a block action
                     if (!user.blocked.includes(blockedId)) {
-                        user.blocked.push(blockedId);
+                        user.blocked.push(blockedId);  // Add to blocked list
                     }
 
-                    // Remove the blocked user from friendsId array (if present)
+                    // Remove from friendsId list when blocking
                     if (user.friendsId.includes(blockedId)) {
                         user.friendsId = user.friendsId.filter(friendId => friendId !== blockedId);
                     }
                 });
+
+                // Handle unblocking action (if blocked already)
+                if (blockedUserIds.length === 1 && !user.blocked.includes(blockedUserIds[0])) {
+                    // If we are unblocking, remove the user from blocked
+                    user.blocked = user.blocked.filter(blockedId => blockedId !== blockedUserIds[0]);
+
+                    // If you want to add them back to friendsId when unblocking, you can uncomment this line:
+                    // user.friendsId.push(blockedUserIds[0]);  // Add back to friends
+                }
             } else {
                 user[key] = updates[key]; // Update the other fields as usual
             }
@@ -314,6 +323,7 @@ router.patch('/Account', async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
+
 
 
 // Search users based on input query
