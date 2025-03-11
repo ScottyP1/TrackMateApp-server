@@ -254,8 +254,6 @@ router.get('/Account', async (req, res) => {
     }
 });
 
-
-
 router.patch('/Account', async (req, res) => {
     const { email, updates } = req.body;
 
@@ -274,28 +272,45 @@ router.patch('/Account', async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        // Update the user's fields based on the provided updates
-        Object.keys(updates).forEach((key) => {
-            if (key === "friendsId") {
-                const newFriends = Array.isArray(updates.friendsId) ? updates.friendsId : [updates.friendsId];
-                // Allow empty arrays to be valid
-                if (JSON.stringify(user.friendsId) !== JSON.stringify(newFriends)) {
-                    user.friendsId = newFriends;  // Directly assign if it's a new list, even if empty
-                }
-            } else if (key === "blocked") {
-                if (blockedUserIds.includes(user._id)) {
-                    return res.status(400).json({ error: 'You cannot block yourself' });
-                }
-                const blockedUserIds = Array.isArray(updates.blocked) ? updates.blocked : [updates.blocked];
+        // Handle blocked updates first
+        if (updates.blocked) {
+            const blockedUserIds = Array.isArray(updates.blocked) ? updates.blocked : [updates.blocked];
 
-                // Check that the user isn't trying to block themselves
-                if (JSON.stringify(user.blocked) !== JSON.stringify(blockedUserIds)) {
-                    user.blocked = blockedUserIds;  // Directly assign if it's a new list, even if empty
+            // Check if the user is trying to block themselves
+            if (blockedUserIds.includes(user._id)) {
+                return res.status(400).json({ error: 'You cannot block yourself' });
+            }
+
+            // Remove blocked users from friends list
+            blockedUserIds.forEach((blockedId) => {
+                if (user.friendsId.includes(blockedId)) {
+                    user.friendsId = user.friendsId.filter(friend => friend !== blockedId);
                 }
-            } else {
-                user[key] = updates[key]; // Update the other fields as usual
+            });
+
+            // Update the blocked list if it's different
+            if (JSON.stringify(user.blocked) !== JSON.stringify(blockedUserIds)) {
+                user.blocked = blockedUserIds;  // Replace the list
+            }
+        }
+
+        // Handle friendsId updates
+        if (updates.friendsId) {
+            const newFriends = Array.isArray(updates.friendsId) ? updates.friendsId : [updates.friendsId];
+            // Update the friends list if it's different
+            if (JSON.stringify(user.friendsId) !== JSON.stringify(newFriends)) {
+                user.friendsId = newFriends;  // Replace the list
+            }
+        }
+
+        // Handle other updates
+        Object.keys(updates).forEach((key) => {
+            if (key !== 'friendsId' && key !== 'blocked') {
+                user[key] = updates[key]; // Update other fields as usual
             }
         });
+
+        // Save the updated user
         await user.save();
         res.json({ user });
     } catch (err) {
@@ -303,8 +318,6 @@ router.patch('/Account', async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
-
-
 
 
 // Search users based on input query
