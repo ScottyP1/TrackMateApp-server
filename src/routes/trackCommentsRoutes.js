@@ -54,7 +54,7 @@ router.post('/TrackComments/report', async (req, res) => {
             from: process.env.EMAIL, // Sender address
             to: process.env.EMAIL, // Admin email address
             subject: 'New Flagged Comment Report',
-            text: `User ${userId} reported comment ${commentId} for: ${reason}`,
+            text: `User ${userId} reported comment ${commentId} reason: ${reason}`,
         };
 
         // Send the email
