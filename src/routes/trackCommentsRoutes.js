@@ -32,7 +32,6 @@ router.get('/TrackComments', async (req, res) => {
     }
 });
 
-
 router.post('/TrackComments/report', async (req, res) => {
     const { userId, commentId, reason } = req.body;
 
@@ -40,31 +39,26 @@ router.post('/TrackComments/report', async (req, res) => {
         // Log the report for debugging
         console.log(`User ${userId} reported comment ${commentId} for: ${reason}`);
 
-        // Set up Nodemailer transporter
-        const transporter = nodemailer.createTransport({
-            service: 'gmail', // Or use any other email service provider you prefer
-            auth: {
-                user: process.env.EMAIL, // Replace with your email
-                pass: process.env.PASSWORD, // Replace with your email password (or better: use an environment variable)
+        const formspreeEndpoint = 'https://formspree.io/f/mgvaelba';
+        const formData = {
+            userId,
+            commentId,
+            reason,
+        };
+
+        // Send a POST request to Formspree
+        const response = await axios.post(formspreeEndpoint, formData, {
+            headers: {
+                'Accept': 'application/json',
             },
         });
 
-        // Define the email content
-        const mailOptions = {
-            from: process.env.EMAIL, // Sender address
-            to: process.env.EMAIL, // Admin email address
-            subject: 'New Flagged Comment Report',
-            text: `User ${userId} reported comment ${commentId} reason: ${reason}`,
-        };
-
-        // Send the email
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.error('Error sending email:', error);
-            } else {
-                console.log('Email sent: ' + info.response);
-            }
-        });
+        // Check for success
+        if (response.status === 200) {
+            console.log('Report successfully sent to Formspree!');
+        } else {
+            console.error('Formspree submission failed:', response.data);
+        }
 
         // Send a response back to the client
         return res.status(200).json({ message: 'Report received and will be reviewed.' });
