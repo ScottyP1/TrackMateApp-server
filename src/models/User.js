@@ -11,11 +11,12 @@ const userSchema = new mongoose.Schema({
     profileAvatar: { type: String, default: '' },
     favorites: { type: [String], default: [] },
     friendsId: { type: [String], default: [] },
-    owned: { type: [String], default: [] }, // New field for storing favorite track ids
+    owned: { type: [String], default: [] },
+    blocked: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     userBike: {
         type: {
-            name: { type: String, required: true },  // Bike name
-            color: { type: String, required: true }  // Bike color
+            name: { type: String, required: true },
+            color: { type: String, required: true }
         },
         required: true
     }
