@@ -283,34 +283,19 @@ router.patch('/Account', async (req, res) => {
                     user.friendsId = newFriends;  // Directly assign if it's a new list, even if empty
                 }
             } else if (key === "blocked") {
+                if (blockedUserIds.includes(user._id)) {
+                    return res.status(400).json({ error: 'You cannot block yourself' });
+                }
                 const blockedUserIds = Array.isArray(updates.blocked) ? updates.blocked : [updates.blocked];
 
                 // Check that the user isn't trying to block themselves
-                if (blockedUserIds.includes(user._id.toString())) {
-                    return res.status(400).json({ error: 'You cannot block yourself' });
+                if (JSON.stringify(user.blocked) !== JSON.stringify(blockedUserIds)) {
+                    user.blocked = blockedUserIds;  // Directly assign if it's a new list, even if empty
                 }
-
-                blockedUserIds.forEach((blockedId) => {
-                    // Block action: Add to blocked and remove from friends
-                    if (!user.blocked.includes(blockedId)) {
-                        user.blocked.push(blockedId);  // Add to blocked list
-                    }
-                    // Remove from friendsId list when blocking
-                    user.friendsId = user.friendsId.filter(friendId => friendId !== blockedId);
-                });
-
-                // Handle unblocking action (if blocked already)
-                blockedUserIds.forEach((blockedId) => {
-                    if (user.blocked.includes(blockedId)) {
-                        user.blocked = user.blocked.filter(blockedId => blockedId !== blockedId);  // Remove from blocked
-                    }
-                });
             } else {
                 user[key] = updates[key]; // Update the other fields as usual
             }
         });
-
-        // Save the updated user to the database
         await user.save();
         res.json({ user });
     } catch (err) {
