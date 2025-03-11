@@ -9,18 +9,22 @@ const router = express.Router();
 
 // GET endpoint to fetch comments for a specific track
 router.get('/TrackComments', async (req, res) => {
-    const { trackId } = req.query;
+    const { trackId, page = 1, limit = 10 } = req.query;  // Default to page 1 and limit 10
 
     if (!trackId) {
         return res.status(400).json({ message: "Track ID is required" });
     }
 
     try {
-        // Fetch comments for the given track ID, sorted by the latest
+        const skip = (page - 1) * limit;
+
+        // Fetch comments for the given track ID, sorted by the latest, and apply pagination
         const comments = await TrackComments.find({ trackId })
-            .sort({ createdAt: -1 }) // Sort by latest
-            .populate("userId", "userName profileAvatar userBike") // Populate the user information for the comment
-            .populate("replies.userId", "userName profileAvatar userBike"); // Populate user information for replies
+            .sort({ createdAt: -1 })  // Sort by latest
+            .skip(skip)  // Skip previous pages
+            .limit(Number(limit))  // Limit the number of comments per page
+            .populate("userId", "userName profileAvatar userBike")
+            .populate("replies.userId", "userName profileAvatar userBike");
 
         return res.status(200).json({ comments });
     } catch (error) {

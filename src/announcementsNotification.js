@@ -6,7 +6,7 @@ const sendAnnoncementNotification = async ({ token, announcement, trackName }) =
         to: token,
         sound: 'default',
         title: 'TrackMate',
-        subtitle: `New announcement for ${trackName}`,
+        subtitle: trackName,
         body: cleanedMessage
     };
     // @${currentUser.userName}`

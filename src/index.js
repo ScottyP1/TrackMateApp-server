@@ -236,7 +236,6 @@ io.on('connection', (socket) => {
         }
     });
 
-
     // Fetch messages for a specific conversation
     socket.on('fetchMessages', async (conversationId) => {
         try {
