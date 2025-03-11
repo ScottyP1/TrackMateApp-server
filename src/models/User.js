@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
     favorites: { type: [String], default: [] },
     friendsId: { type: [String], default: [] },
     owned: { type: [String], default: [] },
-    blocked: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    blocked: { type: [String], default: [] },
     userBike: {
         type: {
             name: { type: String, required: true },
