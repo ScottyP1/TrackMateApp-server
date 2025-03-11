@@ -29,6 +29,25 @@ router.get('/TrackComments', async (req, res) => {
     }
 });
 
+router.post('/TrackComments/report', async (req, res) => {
+    const { userId, commentId, reason } = req.body;
+
+    try {
+        // Process the report (e.g., log it, notify admin, etc.)
+        // You can store the report in a database or send an email to notify you
+        console.log(`User ${userId} reported comment ${commentId} for: ${reason}`);
+
+        // Example: Send an email notification to the admin (or whatever you prefer)
+        // sendNotificationToAdmin(userId, commentId, reason);
+
+        // Send a response back
+        return res.status(200).json({ message: 'Report received and will be reviewed.' });
+    } catch (error) {
+        console.error("Error reporting comment:", error);
+        return res.status(500).json({ message: 'An error occurred. Please try again.' });
+    }
+});
+
 // POST endpoint to create a new comment
 router.post('/TrackComments', async (req, res) => {
     const { text, trackId, userId } = req.body;
