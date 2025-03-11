@@ -45,7 +45,7 @@ router.post('/TrackComments/report', async (req, res) => {
             service: 'gmail', // Or use any other email service provider you prefer
             auth: {
                 user: process.env.EMAIL, // Replace with your email
-                pass: process.env.PW, // Replace with your email password (or better: use an environment variable)
+                pass: process.env.PASSWORD, // Replace with your email password (or better: use an environment variable)
             },
         });
 
