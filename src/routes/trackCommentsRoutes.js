@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const xss = require('xss');
@@ -6,6 +8,7 @@ const TrackComments = mongoose.model('TrackComments');
 const User = mongoose.model('User');
 
 const router = express.Router();
+const nodemailer = require('nodemailer');
 
 // GET endpoint to fetch comments for a specific track
 router.get('/TrackComments', async (req, res) => {
@@ -29,18 +32,41 @@ router.get('/TrackComments', async (req, res) => {
     }
 });
 
+
 router.post('/TrackComments/report', async (req, res) => {
     const { userId, commentId, reason } = req.body;
 
     try {
-        // Process the report (e.g., log it, notify admin, etc.)
-        // You can store the report in a database or send an email to notify you
+        // Log the report for debugging
         console.log(`User ${userId} reported comment ${commentId} for: ${reason}`);
 
-        // Example: Send an email notification to the admin (or whatever you prefer)
-        // sendNotificationToAdmin(userId, commentId, reason);
+        // Set up Nodemailer transporter
+        const transporter = nodemailer.createTransport({
+            service: 'gmail', // Or use any other email service provider you prefer
+            auth: {
+                user: process.env.EMAIL, // Replace with your email
+                pass: process.env.PW, // Replace with your email password (or better: use an environment variable)
+            },
+        });
 
-        // Send a response back
+        // Define the email content
+        const mailOptions = {
+            from: process.env.EMAIL, // Sender address
+            to: process.env.EMAIL, // Admin email address
+            subject: 'New Flagged Comment Report',
+            text: `User ${userId} reported comment ${commentId} for: ${reason}`,
+        };
+
+        // Send the email
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Error sending email:', error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
+
+        // Send a response back to the client
         return res.status(200).json({ message: 'Report received and will be reviewed.' });
     } catch (error) {
         console.error("Error reporting comment:", error);
@@ -50,7 +76,7 @@ router.post('/TrackComments/report', async (req, res) => {
 
 // POST endpoint to create a new comment
 router.post('/TrackComments', async (req, res) => {
-    const { text, trackId, userId } = req.body;
+    const { text, trackId, userId } = req.query;
 
     if (!text || !trackId || !userId) {
         return res.status(400).json({ message: "Missing required fields" });
