@@ -89,6 +89,18 @@ io.on('connection', (socket) => {
     // Listen for the sendMessage event
     socket.on('sendMessage', async ({ receiverId, conversationId, message }) => {
         try {
+            const [otherUser, currentUser] = await Promise.all([
+                User.findById(receiverId).select('blocked'),
+                User.findById(socket.user.id).select('blocked'),
+            ]);
+
+            console.log([otherUser, currentUser])
+            // If the sender is blocked by the receiver, stop execution
+            if (otherUser.blocked?.includes(socket.user.id)) {
+                console.log(`Message blocked: ${socket.user.id} is blocked by ${receiverId}`);
+                return;
+            }
+
             const newMessage = new Inbox({
                 conversationId,
                 senderId: socket.user.id,
@@ -99,11 +111,6 @@ io.on('connection', (socket) => {
             });
 
             await newMessage.save();
-
-            const [otherUser, currentUser] = await Promise.all([
-                User.findById(receiverId).select('userName profileAvatar pushToken blocked'),
-                User.findById(socket.user.id).select('blocked'),
-            ]);
 
             const messageData = { ...newMessage.toObject(), otherUser };
 
@@ -119,25 +126,21 @@ io.on('connection', (socket) => {
                 io.to(socketId).emit('messageSent', messageData);
             });
 
-            // Check if the sender is blocked by the receiver
-            if (!otherUser.blocked?.includes(socket.user.id)) {
-                // Send push notification if the receiver has a push token
-                if (otherUser.pushToken) {
-                    try {
-                        console.log('sending notification', socket.user.id, otherUser.pushToken);
-                        await sendPushNotification(otherUser.pushToken, currentUser, message);
-                    } catch (error) {
-                        console.error("Failed to send push notification:", error);
-                    }
+            // Send push notification if the receiver has a push token
+            if (otherUser.pushToken) {
+                try {
+                    console.log('sending notification', socket.user.id, otherUser.pushToken);
+                    await sendPushNotification(otherUser.pushToken, currentUser, message);
+                } catch (error) {
+                    console.error("Failed to send push notification:", error);
                 }
-            } else {
-                console.log(`Push notification skipped: ${socket.user.id} is blocked by ${receiverId}`);
             }
 
         } catch (err) {
             console.error('Error sending message:', err);
         }
     });
+
 
 
 
