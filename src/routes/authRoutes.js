@@ -288,6 +288,14 @@ router.patch('/Account', async (req, res) => {
                 }
             });
 
+            // Delete messages where the user is sender or receiver and one of them is blocked
+            await Inbox.deleteMany({
+                $or: [
+                    { senderId: { $in: blockedUserIds }, receiverId: user._id },
+                    { senderId: user._id, receiverId: { $in: blockedUserIds } }
+                ]
+            });
+
             // Update the blocked list if it's different
             if (JSON.stringify(user.blocked) !== JSON.stringify(blockedUserIds)) {
                 user.blocked = blockedUserIds;  // Replace the list
