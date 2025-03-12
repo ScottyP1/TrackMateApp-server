@@ -94,11 +94,8 @@ io.on('connection', (socket) => {
                 User.findById(socket.user.id).select('blocked'),
             ]);
 
-            console.log([otherUser, currentUser]);
-
             // If the sender is blocked by the receiver, stop execution and emit 'messageBlocked'
             if (otherUser.blocked?.includes(socket.user.id)) {
-                console.log(`Message blocked: ${socket.user.id} is blocked by ${receiverId}`);
                 // Emit the messageBlocked event to the sender
                 socket.emit('messageBlocked', { error: 'User is no longer accepting messages from this account.' });
                 return;

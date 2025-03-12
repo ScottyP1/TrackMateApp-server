@@ -174,6 +174,43 @@ router.get('/check-email', async (req, res) => {
     }
 });
 
+router.post('/ReportUser', async (req, res) => {
+    const { userId, reportedUser, commentId, reason } = req.body;
+
+    try {
+        // Log the report for debugging
+        console.log(`User ${userId} reported comment ${commentId} for: ${reason}`);
+
+        const formspreeEndpoint = 'https://formspree.io/f/mgvaelba';
+        const formData = {
+            userId,
+            reportedUser,
+            commentId,
+            reason,
+        };
+
+        // Send a POST request to Formspree
+        const response = await axios.post(formspreeEndpoint, formData, {
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+
+        // Check for success
+        if (response.status === 200) {
+            console.log('Report successfully sent.');
+        } else {
+            console.error('Formspree submission failed:', response.data);
+        }
+
+        // Send a response back to the client
+        return res.status(200).json({ message: 'Report received and will be reviewed.' });
+    } catch (error) {
+        console.error("Error reporting comment:", error);
+        return res.status(500).json({ message: 'An error occurred. Please try again.' });
+    }
+});
+
 // Check if username is available
 router.get('/check-username', async (req, res) => {
     const { userName } = req.query;
