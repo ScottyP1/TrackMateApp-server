@@ -95,14 +95,14 @@ io.on('connection', (socket) => {
                 receiverId,
                 text: message,
                 createdAt: new Date(),
-                isSent: true, // Set before saving
+                isSent: true,
             });
 
             await newMessage.save();
 
             const [otherUser, currentUser] = await Promise.all([
-                User.findById(receiverId).select('userName profileAvatar pushToken'),
-                User.findById(socket.user.id),
+                User.findById(receiverId).select('userName profileAvatar pushToken blocked'),
+                User.findById(socket.user.id).select('blocked'),
             ]);
 
             const messageData = { ...newMessage.toObject(), otherUser };
@@ -119,20 +119,26 @@ io.on('connection', (socket) => {
                 io.to(socketId).emit('messageSent', messageData);
             });
 
-            // Send push notification if the receiver has a push token
-            if (otherUser.pushToken) {
-                try {
-                    console.log('sending notification', socket.user.id, otherUser.pushToken)
-                    await sendPushNotification(otherUser.pushToken, currentUser, message);
-                } catch (error) {
-                    console.error("Failed to send push notification:", error);
+            // Check if the sender is blocked by the receiver
+            if (!otherUser.blocked?.includes(socket.user.id)) {
+                // Send push notification if the receiver has a push token
+                if (otherUser.pushToken) {
+                    try {
+                        console.log('sending notification', socket.user.id, otherUser.pushToken);
+                        await sendPushNotification(otherUser.pushToken, currentUser, message);
+                    } catch (error) {
+                        console.error("Failed to send push notification:", error);
+                    }
                 }
+            } else {
+                console.log(`Push notification skipped: ${socket.user.id} is blocked by ${receiverId}`);
             }
 
         } catch (err) {
             console.error('Error sending message:', err);
         }
     });
+
 
 
     socket.on('markMessagesAsRead', async (conversationId) => {
