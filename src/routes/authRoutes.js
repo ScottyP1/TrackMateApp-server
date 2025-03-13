@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const express = require('express');
 const mongoose = require('mongoose');
 const User = mongoose.model('User');
@@ -58,7 +56,7 @@ router.post(
 
 
         const systemUserId = process.env.ADMIN;
-        const conversationId = [systemUserId, user._id].sort().join('_');
+        const conversationId = [systemUserId, user._id].sort().join('-');
 
         const welcomeMessage = new Inbox({
             conversationId,
