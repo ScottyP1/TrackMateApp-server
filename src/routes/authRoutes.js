@@ -15,6 +15,7 @@ router.post(
         body('userName').trim().notEmpty().withMessage('Username is required').escape(),
         body('email').isEmail().withMessage('Invalid email').normalizeEmail(),
         body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long').escape(),
+        body('bio').isLength({ max: 250 }).withMessage("Bio can only be 250 characters long.").escape()
     ],
     async (req, res) => {
         const errors = validationResult(req);
@@ -22,7 +23,7 @@ router.post(
             return res.status(422).json({ errors: errors.array() });
         }
 
-        const { userName, email, password, userBike, profileAvatar, acceptedNotifications } = req.body;
+        const { userName, email, password, userBike, profileAvatar, bio } = req.body;
         const lowerCaseEmail = email.toLowerCase();
         const lowerCaseUserName = userName.toLowerCase();
 
@@ -39,6 +40,7 @@ router.post(
         const user = new User({
             userName: lowerCaseUserName,
             email: lowerCaseEmail,
+            bio,
             admin: false,
             userBike: { name: userBike?.name || 'No Preference', color: userBike?.color || '#000' },
             password,
@@ -57,6 +59,7 @@ router.post(
             id: user._id,
             admin: user.admin,
             email: user.email,
+            bio,
             profileAvatar: user.profileAvatar,
             userName: user.userName,
             userBike: user.userBike,
@@ -101,6 +104,7 @@ router.post(
                 id: user._id,
                 admin: user.admin,
                 email: user.email,
+                bio: user.bio,
                 profileAvatar: user.profileAvatar,
                 userName: user.userName,
                 userBike: user.userBike,
@@ -276,6 +280,7 @@ router.get('/Account', async (req, res) => {
             return res.send({
                 id: user._id,
                 email: user.email,
+                bio: user.bio,
                 admin: user.admin,
                 profileAvatar: user.profileAvatar,
                 userName: user.userName,
@@ -367,34 +372,34 @@ router.patch('/Account', async (req, res) => {
 
 
 // Search users based on input query
-router.get('/search-users', async (req, res) => {
-    const { query } = req.query;
+// router.get('/search-users', async (req, res) => {
+//     const { query } = req.query;
 
-    if (!query || query.trim() === "") {
-        return res.status(400).json({ error: 'Search query is required' });
-    }
+//     if (!query || query.trim() === "") {
+//         return res.status(400).json({ error: 'Search query is required' });
+//     }
 
-    try {
-        const regex = new RegExp(query, 'i');
-        const users = await User.find({
-            $or: [{ email: { $regex: regex } }, { userName: { $regex: regex } }]
-        });
+//     try {
+//         const regex = new RegExp(query, 'i');
+//         const users = await User.find({
+//             $or: [{ email: { $regex: regex } }, { userName: { $regex: regex } }]
+//         });
 
-        res.json(users.map(({ _id, email, profileAvatar, userName, userBike, friendsId, favorites, owned }) => ({
-            id: _id,
-            email,
-            profileAvatar,
-            userName,
-            userBike,
-            friendsId: friendsId || [],
-            favorites: favorites || [],
-            owned: owned || [],
-        })));
-    } catch (err) {
-        console.error("Search error:", err);
-        res.status(500).json({ error: 'Server error' });
-    }
-});
+//         res.json(users.map(({ _id, email, profileAvatar, userName, userBike, friendsId, favorites, owned }) => ({
+//             id: _id,
+//             email,
+//             profileAvatar,
+//             userName,
+//             userBike,
+//             friendsId: friendsId || [],
+//             favorites: favorites || [],
+//             owned: owned || [],
+//         })));
+//     } catch (err) {
+//         console.error("Search error:", err);
+//         res.status(500).json({ error: 'Server error' });
+//     }
+// });
 
 
 
