@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const User = mongoose.model('User');
@@ -53,6 +55,24 @@ router.post(
 
         await user.save();
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
+
+
+        const systemUserId = process.env.ADMIN;
+        const conversationId = [systemUserId, user._id].sort().join('_');
+
+        const welcomeMessage = new Inbox({
+            conversationId,
+            senderId: systemUserId,
+            receiverId: user._id,
+            text: `🏁 Welcome to TrackMate! 🚀\n\nWe're here to help you discover the best riding spots—whether public or private—and connect with other 
+            riders. Explore tracks near you, stay updated on your favorite tracks, and chat with fellow riders.\n\nWe need your help to grow our community! 
+            🏆 Encourage track owners to claim their tracks and keep riders informed. If you own a private track, submit it to help riders in your area 
+            find hidden gems.\n\nLet's build the ultimate riding network together! 🤘🔥`,
+            isRead: false,
+            createdAt: new Date()
+        });
+
+        await welcomeMessage.save();
 
         res.send({
             token,
@@ -280,7 +300,7 @@ router.get('/Account', async (req, res) => {
             return res.send({
                 id: user._id,
                 email: user.email,
-                bio: user.bio,
+                bio: user.bio || '',
                 admin: user.admin,
                 profileAvatar: user.profileAvatar,
                 userName: user.userName,
