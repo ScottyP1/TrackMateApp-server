@@ -373,34 +373,34 @@ router.patch('/Account', async (req, res) => {
 
 
 // Search users based on input query
-// router.get('/search-users', async (req, res) => {
-//     const { query } = req.query;
+router.get('/search-users', async (req, res) => {
+    const { query } = req.query;
 
-//     if (!query || query.trim() === "") {
-//         return res.status(400).json({ error: 'Search query is required' });
-//     }
+    if (!query || query.trim() === "") {
+        return res.status(400).json({ error: 'Search query is required' });
+    }
 
-//     try {
-//         const regex = new RegExp(query, 'i');
-//         const users = await User.find({
-//             $or: [{ email: { $regex: regex } }, { userName: { $regex: regex } }]
-//         });
+    try {
+        const regex = new RegExp(query, 'i');
+        const users = await User.find({
+            $or: [{ email: { $regex: regex } }, { userName: { $regex: regex } }]
+        });
 
-//         res.json(users.map(({ _id, email, profileAvatar, userName, userBike, friendsId, favorites, owned }) => ({
-//             id: _id,
-//             email,
-//             profileAvatar,
-//             userName,
-//             userBike,
-//             friendsId: friendsId || [],
-//             favorites: favorites || [],
-//             owned: owned || [],
-//         })));
-//     } catch (err) {
-//         console.error("Search error:", err);
-//         res.status(500).json({ error: 'Server error' });
-//     }
-// });
+        res.json(users.map(({ _id, email, profileAvatar, userName, userBike, friendsId, favorites, owned }) => ({
+            id: _id,
+            email,
+            profileAvatar,
+            userName,
+            userBike,
+            friendsId: friendsId || [],
+            favorites: favorites || [],
+            owned: owned || [],
+        })));
+    } catch (err) {
+        console.error("Search error:", err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
 
 
 
