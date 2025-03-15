@@ -192,8 +192,8 @@ router.post('/ReportUser', async (req, res) => {
 
         // Prepare the report details
         const reportDetails = {
-            reporter: reportingUser ? `${reportingUser.username} (ID: ${userId})` : `Unknown (ID: ${userId})`,
-            reported: reportedAccount ? `${reportedAccount.username} (ID: ${reportedUser})` : `Unknown (ID: ${reportedUser})`,
+            reporter: reportingUser ? `${reportingUser.userName} (ID: ${userId})` : `Unknown (ID: ${userId})`,
+            reported: reportedAccount ? `${reportedAccount.userName} (ID: ${reportedUser})` : `Unknown (ID: ${reportedUser})`,
             comment: comment ? `"${comment.text}" (ID: ${commentId})` : `No comment reported`,
             reason,
         };
