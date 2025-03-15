@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const User = mongoose.model('User');
 const Inbox = mongoose.model('Inbox')
+const TrackComments = mongoose.model('TrackComments');
+
 const axios = require('axios');
 
 const jwt = require('jsonwebtoken');
@@ -183,36 +185,35 @@ router.post('/ReportUser', async (req, res) => {
     const { userId, reportedUser, commentId, reason } = req.body;
 
     try {
-        // Log the report for debugging
-        console.log(`User ${userId} reported comment ${commentId} for: ${reason}`);
+        // Fetch data (if available)
+        const comment = commentId ? await TrackComments.findById(commentId) : null;
+        const reportingUser = userId ? await User.findById(userId) : null;
+        const reportedAccount = reportedUser ? await User.findById(reportedUser) : null;
 
-        const formspreeEndpoint = 'https://formspree.io/f/mgvaelba';
-        const formData = {
-            userId,
-            reportedUser,
-            commentId,
+        // Prepare the report details
+        const reportDetails = {
+            reporter: reportingUser ? `${reportingUser.username} (ID: ${userId})` : `Unknown (ID: ${userId})`,
+            reported: reportedAccount ? `${reportedAccount.username} (ID: ${reportedUser})` : `Unknown (ID: ${reportedUser})`,
+            comment: comment ? `"${comment.text}" (ID: ${commentId})` : `No comment reported`,
             reason,
         };
 
-
-        const response = await axios.post(formspreeEndpoint, formData, {
-            headers: {
-                'Accept': 'application/json',
-            },
+        // Send to Formspree
+        const formspreeEndpoint = 'https://formspree.io/f/mgvaelba';
+        const response = await axios.post(formspreeEndpoint, reportDetails, {
+            headers: { 'Accept': 'application/json' },
         });
 
-        // Check for success
         if (response.status === 200) {
             console.log('Report successfully sent.');
+            return res.status(200).json({ message: 'Report received and will be reviewed.' });
         } else {
             console.error('Formspree submission failed:', response.data);
+            return res.status(500).json({ message: 'Failed to submit the report.' });
         }
-
-        // Send a response back to the client
-        return res.status(200).json({ message: 'Report received and will be reviewed.' });
     } catch (error) {
         console.error("Error reporting comment:", error);
-        return res.status(500).json({ message: 'An error occurred. Please try again.' });
+        return res.status(500).json({ message: 'An error occurred while processing the report.' });
     }
 });
 
