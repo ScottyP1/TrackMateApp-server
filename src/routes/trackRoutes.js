@@ -12,7 +12,7 @@ router.get('/Tracks', async (req, res) => {
     if (!zipCode && !trackName && (!lat || !lng)) {
         return res.status(400).json({ message: 'Please provide a track name, zip code, or location.' });
     }
-
+    console.log(zipCode)
     try {
         // If the trackName is provided
         if (trackName) {
