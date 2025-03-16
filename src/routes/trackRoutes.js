@@ -14,6 +14,7 @@ router.get('/Tracks', async (req, res) => {
     }
 
     try {
+        console.log(zipCode)
         // If the trackName is provided
         if (trackName) {
             const sanitizedTrackName = escapeRegExp(trackName);
@@ -29,9 +30,7 @@ router.get('/Tracks', async (req, res) => {
 
         // If zipCode is provided, convert it to lat/lng (geocode it)
         if (zipCode) {
-            console.log('is Zip')
             const userLocation = await geocodeZipCode(zipCode); // Assuming this returns { lat, lng }
-            console.log(userLocation)
             if (!userLocation) {
                 return res.status(404).json({ message: 'No tracks found in this area.' });
             }
