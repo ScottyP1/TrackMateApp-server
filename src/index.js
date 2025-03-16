@@ -90,7 +90,7 @@ io.on('connection', (socket) => {
     socket.on('sendMessage', async ({ receiverId, conversationId, message }) => {
         try {
             const [otherUser, currentUser] = await Promise.all([
-                User.findById(receiverId).select('blocked'),
+                User.findById(receiverId).select('blocked pushToken'),
                 User.findById(socket.user.id).select('blocked'),
             ]);
 
