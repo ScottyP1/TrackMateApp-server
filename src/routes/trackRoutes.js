@@ -12,7 +12,7 @@ router.get('/Tracks', async (req, res) => {
     if (!zipCode && !trackName && (!lat || !lng)) {
         return res.status(400).json({ message: 'Please provide a track name, zip code, or location.' });
     }
-    console.log(zipCode)
+
     try {
         // If the trackName is provided
         if (trackName) {
@@ -29,8 +29,9 @@ router.get('/Tracks', async (req, res) => {
 
         // If zipCode is provided, convert it to lat/lng (geocode it)
         if (zipCode) {
+            console.log('is Zip')
             const userLocation = await geocodeZipCode(zipCode); // Assuming this returns { lat, lng }
-
+            console.log(userLocation)
             if (!userLocation) {
                 return res.status(404).json({ message: 'No tracks found in this area.' });
             }
@@ -51,7 +52,7 @@ router.get('/Tracks', async (req, res) => {
                     }
                 }
             }).lean();
-
+            console.log(tracks)
             if (tracks.length === 0) {
                 return res.status(404).json({ message: 'No tracks found in this area.' });
             }
