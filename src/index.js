@@ -91,7 +91,7 @@ io.on('connection', (socket) => {
         try {
             const [otherUser, currentUser] = await Promise.all([
                 User.findById(receiverId).select('blocked pushToken'),
-                User.findById(socket.user.id).select('blocked'),
+                User.findById(socket.user.id).select('blocked userName'),
             ]);
 
             // If the sender is blocked by the receiver, stop execution and emit 'messageBlocked'
@@ -126,11 +126,8 @@ io.on('connection', (socket) => {
                 io.to(socketId).emit('messageSent', messageData);
             });
 
-            // Send push notification if the receiver has a push token
-            console.log(otherUser)
             if (otherUser.pushToken) {
                 try {
-                    console.log('sending notification', socket.user.id, otherUser.pushToken);
                     await sendPushNotification(otherUser.pushToken, currentUser, message);
                 } catch (error) {
                     console.error("Failed to send push notification:", error);
