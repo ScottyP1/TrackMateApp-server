@@ -14,7 +14,6 @@ router.get('/Tracks', async (req, res) => {
     }
 
     try {
-        console.log(zipCode)
         // If the trackName is provided
         if (trackName) {
             const sanitizedTrackName = escapeRegExp(trackName);
@@ -51,7 +50,7 @@ router.get('/Tracks', async (req, res) => {
                     }
                 }
             }).lean();
-            console.log(tracks)
+
             if (tracks.length === 0) {
                 return res.status(404).json({ message: 'No tracks found in this area.' });
             }
